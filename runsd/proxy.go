@@ -101,7 +101,7 @@ func resolveCloudRunHost(internalDomain, hostname, curRegion, projectHash string
 
 	trimmed := strings.TrimSuffix(hostname, "."+strings.Trim(internalDomain, "."))
 
-	klog.V(5).Infof("number of trimmed=%s", trimmed)
+	klog.V(5).Infof("number of trimmed=%s", strings.Count(trimmed, "."))
 
 	if (strings.Count(trimmed, ".") != 1) {
 		// Request may be coming from domain in LB
