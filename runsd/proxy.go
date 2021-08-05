@@ -101,6 +101,8 @@ func resolveCloudRunHost(internalDomain, hostname, curRegion, projectHash string
 
 	trimmed := strings.TrimSuffix(hostname, "."+strings.Trim(internalDomain, "."))
 
+	klog.V(5).Infof("number of trimmed=%s", trimmed)
+
 	if (strings.Count(trimmed, ".") != 1) {
 		// Request may be coming from domain in LB
 		// Get Cloud Run service name from env K_SERVICE set by GCP
