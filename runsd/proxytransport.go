@@ -43,6 +43,7 @@ func (a authenticatingTransport) RoundTrip(req *http.Request) (*http.Response, e
 
 	klog.V(5).Infof("[proxytransport] receive req host=%s", req.Host)
 	idToken, err := identityToken("https://" + req.Host)
+	klog.V(5).Infof("[proxytransport] receive idToken=%s", idToken)
 	if err != nil {
 		klog.V(1).Infof("WARN: failed to get ID token for host=%s: %v", req.Host, err)
 		r := new(http.Response)
@@ -51,6 +52,7 @@ func (a authenticatingTransport) RoundTrip(req *http.Request) (*http.Response, e
 		return r, nil
 	}
 	if req.Header.Get("authorization") == "" {
+		klog.V(5).Infof("[proxytransport] receive authorization=%s", idToken)
 		req.Header.Set("authorization", "Bearer "+idToken)
 	}
 	ua := req.Header.Get("user-agent")
