@@ -103,40 +103,27 @@ func resolveCloudRunHost(internalDomain, hostname, curRegion, projectHash string
 
 	klog.V(5).Infof("number of trimmed=%s", strings.Count(trimmed, "."))
 
-	if (strings.Count(trimmed, ".") != 1) {
-		// Request may be coming from domain in LB
-		// Get Cloud Run service name from env K_SERVICE set by GCP
-		svc := os.Getenv("K_SERVICE")
+	// Request may be coming from domain in LB
+	// Get Cloud Run service name from env K_SERVICE set by GCP
+	svc := os.Getenv("K_SERVICE")
 
-		client := &http.Client{}
-		req, _ := http.NewRequest("GET", "http://metadata.google.internal/computeMetadata/v1/instance/region", nil)
-		req.Header.Set("Metadata-Flavor", "Google")
-		resp, err := client.Do(req)
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", "http://metadata.google.internal/computeMetadata/v1/instance/region", nil)
+	req.Header.Set("Metadata-Flavor", "Google")
+	resp, err := client.Do(req)
 
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		bodyString := string(bodyBytes)
-		klog.V(5).Infof("region response=%s", bodyString)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyString := string(bodyBytes)
+	klog.V(5).Infof("region response=%s", bodyString)
 
-		rc := bodyString
+	rc := bodyString
 
-		if err != nil {
-			return "", fmt.Errorf("Can`t retrieve region for current execution")
-		}
-
-		return mkCloudRunHost(svc, rc, projectHash), nil
-
-	} else {
-		splits := strings.SplitN(trimmed, ".", 2)
-		svc, svcRegion := splits[0], splits[1]
-	
-		rc, ok := cloudRunRegionCodes[svcRegion]
-
-		if !ok {
-			return "", fmt.Errorf("region %q is not handled (inferred from hostname %s), try upgrading runsd", svcRegion, hostname)
-		}
-
-		return mkCloudRunHost(svc, rc, projectHash), nil
+	if err != nil {
+		return "", fmt.Errorf("Can`t retrieve region for current execution")
 	}
+
+	return mkCloudRunHost(svc, rc, projectHash), nil
+
 }
 
 func mkCloudRunHost(svc, regionCode, projectHash string) string {
