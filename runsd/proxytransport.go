@@ -41,6 +41,7 @@ func (a authenticatingTransport) RoundTrip(req *http.Request) (*http.Response, e
 		return v, nil
 	}
 
+	klog.V(5).Infof("[proxytransport] receive req host=%s", req.Host)
 	idToken, err := identityToken("https://" + req.Host)
 	if err != nil {
 		klog.V(1).Infof("WARN: failed to get ID token for host=%s: %v", req.Host, err)
