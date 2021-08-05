@@ -108,7 +108,8 @@ func (d *dnsHijack) handleLocal(w dns.ResponseWriter, msg *dns.Msg) {
 			return
 		}
 		region := parts[1]
-		_, ok := cloudRunRegionCodes[region]
+		rc, ok := cloudRunRegionCodes[region]
+		parts[1] = rc
 		if !ok {
 			klog.V(4).Infof("[dns] < unknown region=%q from name=%q, nxdomain", region, q.Name)
 			nxdomain(w, msg)
