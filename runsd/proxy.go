@@ -53,8 +53,6 @@ func (rp *reverseProxy) newReverseProxyHandler(tr http.RoundTripper) http.Handle
 	tokenInject := authenticatingTransport{next: tr}
 	transport := loggingTransport{next: tokenInject}
 
-	klog.V(5).Infof("[reverse_proxy] transport=%s", transport)
-
 	return &httputil.ReverseProxy{
 		Transport:     transport,
 		FlushInterval: -1, // to support grpc streaming responses
@@ -84,6 +82,7 @@ func (rp *reverseProxy) newReverseProxyHandler(tr http.RoundTripper) http.Handle
 			req.URL.Host = runHost
 			req.Host = runHost
 			req.Header.Set("host", runHost)
+			klog.V(5).Infof("[director] auth_header=%s", req.Header.Get("authorization"))
 			klog.V(5).Infof("[director] rewrote host=%s to=%s new_url=%q", origHost, runHost, req.URL)
 		},
 	}
