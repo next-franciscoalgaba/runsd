@@ -50,9 +50,7 @@ const (
 )
 
 func (rp *reverseProxy) newReverseProxyHandler(tr http.RoundTripper) http.Handler {
-	tokenInject := authenticatingTransport{next: tr}
-	loggingInject := loggingTransport{next: tokenInject}
-	transport := DebugTransport{next: loggingInject}
+	transport := loggingTransport{next: tr}
 
 	return &httputil.ReverseProxy{
 		Transport:     transport,
@@ -79,10 +77,24 @@ func (rp *reverseProxy) newReverseProxyHandler(tr http.RoundTripper) http.Handle
 				*req = *newReq
 				return
 			}
+			runToken, err := tokenFromHost(runHost)
+			if err != nil {
+				klog.Warningf("WARN: reverse proxy failed to retrieve JWT token for host=%s: %v", req.Host, err)
+				resp := &http.Response{
+					Request:    req,
+					StatusCode: http.StatusInternalServerError,
+					Body: ioutil.NopCloser(bytes.NewReader([]byte(
+						fmt.Sprintf("runsd couldn't retrieve JWT token for host=%q: %v", req.Host, err)))),
+				}
+				newReq := req.WithContext(context.WithValue(req.Context(), ctxKeyEarlyResponse, resp))
+				*req = *newReq
+				return
+			}
 			req.URL.Scheme = "https"
 			req.URL.Host = runHost
 			req.Host = runHost
 			req.Header.Set("host", runHost)
+			req.Header.Set("authorization", runToken)
 			klog.V(5).Infof("[director] rewrote host=%s to=%s new_url=%q", origHost, runHost, req.URL)
 		},
 	}
