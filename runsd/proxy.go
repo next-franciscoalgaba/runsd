@@ -51,10 +51,11 @@ const (
 
 func (rp *reverseProxy) newReverseProxyHandler(tr http.RoundTripper) http.Handler {
 	tokenInject := authenticatingTransport{next: tr}
-	// transport := loggingTransport{next: tokenInject}
+	loggingInject := loggingTransport{next: tokenInject}
+	transport := DebugTransport{next: loggingInject}
 
 	return &httputil.ReverseProxy{
-		Transport:     tokenInject,
+		Transport:     transport,
 		FlushInterval: -1, // to support grpc streaming responses
 		Director: func(req *http.Request) {
 			klog.V(5).Infof("[director] receive req host=%s", req.Host)
@@ -108,19 +109,10 @@ func resolveCloudRunHost(internalDomain, hostname, curRegion, projectHash string
 	svc := os.Getenv("K_SERVICE")
 	klog.V(5).Infof("service name response=%s", svc)
 
-	client := &http.Client{}
-	req, _ := http.NewRequest("GET", "http://metadata.google.internal/computeMetadata/v1/instance/region", nil)
-	req.Header.Set("Metadata-Flavor", "Google")
-	resp, err := client.Do(req)
-
+	region, err := regionFromMetadata()
 	if err != nil {
-		return "", fmt.Errorf("Can`t retrieve region for current execution")
+		klog.Exitf("[proxy] failed to infer region from metadata service: %v", err)
 	}
-
-	responseBytes, err := ioutil.ReadAll(resp.Body)
-	responseString := string(responseBytes)
-	responseSplitted := strings.Split(responseString, "/")
-	region := responseSplitted[len(responseSplitted)-1]
 
 	klog.V(5).Infof("region response=%s", region)
 	rc, ok := cloudRunRegionCodes[region]

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 	"time"
 
@@ -93,4 +94,25 @@ func (l loggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 	}
 	return resp, err
+}
+
+type DebugTransport struct {
+	next http.RoundTripper
+}
+
+var _ http.Flusher = DebugTransport{} // ensure it's a Flusher
+
+func (d DebugTransport) Flush() {
+	if v, ok := d.next.(http.Flusher); ok {
+		v.Flush()
+	}
+}
+
+func (d DebugTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	b, err := httputil.DumpRequestOut(req, false)
+	if err != nil {
+			return nil, err
+	}
+	fmt.Println(string(b))
+	return http.DefaultTransport.RoundTrip(req)
 }
