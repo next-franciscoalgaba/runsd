@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/httputil"
 	"strings"
 	"time"
 
