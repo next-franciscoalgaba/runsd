@@ -51,9 +51,9 @@ func (a authenticatingTransport) RoundTrip(req *http.Request) (*http.Response, e
 		r.StatusCode = http.StatusInternalServerError
 		return r, nil
 	}
-	if req.Header.Get("authorization") == "" {
+	if req.Header.Get("Authorization") == "" {
 		klog.V(5).Infof("[proxytransport] receive authorization=%s", idToken)
-		req.Header.Set("authorization", "Bearer "+idToken)
+		req.Header.Set("Authorization", "Bearer "+idToken)
 	}
 	ua := req.Header.Get("user-agent")
 	req.Header.Set("user-agent", fmt.Sprintf("runsd version=%s", version))
