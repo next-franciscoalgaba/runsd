@@ -94,7 +94,7 @@ func (rp *reverseProxy) newReverseProxyHandler(tr http.RoundTripper) http.Handle
 			req.URL.Host = runHost
 			req.Host = runHost
 			req.Header.Set("host", runHost)
-			req.Header.Set("authorization", runToken)
+			req.Header.Set("authorization", "Bearer "+runToken)
 			klog.V(5).Infof("[director] rewrote host=%s to=%s new_url=%q", origHost, runHost, req.URL)
 		},
 	}
