@@ -118,7 +118,10 @@ func resolveCloudRunHost(internalDomain, hostname, curRegion, projectHash string
 
 	// Request may be coming from domain in LB
 	// Get Cloud Run service name from env K_SERVICE set by GCP
-	svc := os.Getenv("K_SERVICE")
+	svc, exists := os.LookupEnv("K_SERVICE")
+	if !exists {
+		svc = "iap-auth-service"
+	}
 	klog.V(5).Infof("service name response=%s", svc)
 
 	region, err := regionFromMetadata()
